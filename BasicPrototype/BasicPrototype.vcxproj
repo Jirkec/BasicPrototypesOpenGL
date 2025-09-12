@@ -138,6 +138,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linmath.h" />
+    <ClInclude Include="stb_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resources\Texture\Stone.jpg" />
+    <Image Include="..\Resources\Texture\Stone2.jpg" />
+    <Image Include="..\Resources\Texture\Stone_smile.jpg" />
+    <Image Include="..\Resources\Texture\Wood.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

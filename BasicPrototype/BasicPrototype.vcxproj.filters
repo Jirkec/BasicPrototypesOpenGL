@@ -16,6 +16,9 @@
     <Filter Include="Source Files\glad_Src">
       <UniqueIdentifier>{a70eb5c2-fc78-4749-85a3-f94f468e2f51}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Textures">
+      <UniqueIdentifier>{5f4d065c-351f-4a84-bd09-db6a53710c48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BasicPrototype.cpp">
@@ -35,5 +38,22 @@
     <ClInclude Include="linmath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resources\Texture\Wood.jpg">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="..\Resources\Texture\Stone2.jpg">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="..\Resources\Texture\Stone.jpg">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="..\Resources\Texture\Stone_smile.jpg">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>
