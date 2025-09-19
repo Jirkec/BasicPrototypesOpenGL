@@ -12,6 +12,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+
+// load
 GLuint LoadTexture(const char* filename)
 {
     int width, height, channels;
@@ -42,7 +44,7 @@ GLuint LoadTexture(const char* filename)
     }
 
     GLenum format = (channels == 4) ? GL_RGBA : GL_RGB;
-
+    
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -168,8 +170,8 @@ uniform sampler2D tex;
 void main()
 {
     //fragment = vec4(color, 1.0);
-    //fragment = texture(tex, texCoord);
-    fragment = texture(tex, texCoord) * vec4(color, 1.0);
+    fragment = texture(tex, texCoord);
+    //fragment = texture(tex, texCoord) * vec4(color, 1.0);
 })";
 
 
