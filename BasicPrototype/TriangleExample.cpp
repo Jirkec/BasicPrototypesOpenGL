@@ -174,6 +174,19 @@ void main()
     //fragment = texture(tex, texCoord) * vec4(color, 1.0);
 })";
 
+// Camera variables (global for simplicity)
+vec3 cameraPos = { 0.0f, 2.0f, 5.0f };
+vec3 cameraFront = { 0.0f, 0.0f, -1.0f };
+vec3 cameraUp = { 0.0f, 1.0f, 0.0f };
+
+float cameraSpeed = 0.05f; // Units per frame
+
+float yaw = -90.0f;   // Yaw is initialized to -90.0 degrees to look along -Z
+float pitch = 0.0f;
+double lastX = 320, lastY = 240; // Start at window center
+bool firstMouse = true;
+bool rightMouseDown = false;
+float mouseSensitivity = 0.1f;
 
 static void error_callback(int error, const char* description)
 {
@@ -187,10 +200,44 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (action == GLFW_PRESS || action == GLFW_REPEAT)
     {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
+        /*
+        // Basic camera movement with a lag
+        if (key == GLFW_KEY_W) {
+            // Move forward (along cameraFront)
+            cameraPos[0] += cameraFront[0] * cameraSpeed;
+            cameraPos[1] += cameraFront[1] * cameraSpeed;
+            cameraPos[2] += cameraFront[2] * cameraSpeed;
+        }
+        if (key == GLFW_KEY_S) {
+            // Move left (along cameraFront)
+            cameraPos[0] -= cameraFront[0] * cameraSpeed;
+            cameraPos[1] -= cameraFront[1] * cameraSpeed;
+            cameraPos[2] -= cameraFront[2] * cameraSpeed;
+        }
+        if (key == GLFW_KEY_A) {
+            vec3 cameraLeft;
+            vec3_mul_cross(cameraLeft, cameraFront, cameraUp);
+            vec3_norm(cameraLeft, cameraLeft);
+
+            // Move right (along cameraFront)
+            cameraPos[0] -= cameraLeft[0] * cameraSpeed;
+            cameraPos[1] -= cameraLeft[1] * cameraSpeed;
+            cameraPos[2] -= cameraLeft[2] * cameraSpeed;
+        }
+        if (key == GLFW_KEY_D) {
+            vec3 cameraRight;
+            vec3_mul_cross(cameraRight, cameraFront, cameraUp);
+            vec3_norm(cameraRight, cameraRight);
+
+            // Move right (along cameraFront)
+            cameraPos[0] += cameraRight[0] * cameraSpeed;
+            cameraPos[1] += cameraRight[1] * cameraSpeed;
+            cameraPos[2] += cameraRight[2] * cameraSpeed;
+        }*/
     }
+
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
@@ -202,12 +249,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         
         // Store for use in picking code
         printf("Mouse Click at: %f, %f\n", xpos, ypos);
+    }
 
-
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-
-
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        
+        // Store for use in picking code
+        printf("Mouse Click at: %f, %f\n", xpos, ypos);
     }
 }
 
@@ -318,9 +368,52 @@ int main(void)
 
     GLuint cubeTextureID = LoadTexture("D:/Dokumenty/repos/Graphics/BasicPrototype/Resources/Texture/Stone.jpg");
 
+    //background color
+    glClearColor(0.67f, 0.82f, 0.93f, 1.0f);
 
     while (!glfwWindowShouldClose(window))
     {
+        // 1. Poll/input events
+        glfwPollEvents();
+
+        mat4x4 view;
+        mat4x4_identity(view);
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPos[0] += cameraFront[0] * cameraSpeed;
+            cameraPos[1] += cameraFront[1] * cameraSpeed;
+            cameraPos[2] += cameraFront[2] * cameraSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPos[0] -= cameraFront[0] * cameraSpeed;
+            cameraPos[1] -= cameraFront[1] * cameraSpeed;
+            cameraPos[2] -= cameraFront[2] * cameraSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            vec3 cameraLeft;
+            vec3_mul_cross(cameraLeft, cameraFront, cameraUp);
+            vec3_norm(cameraLeft, cameraLeft);
+            cameraPos[0] -= cameraLeft[0] * cameraSpeed;
+            cameraPos[1] -= cameraLeft[1] * cameraSpeed;
+            cameraPos[2] -= cameraLeft[2] * cameraSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            vec3 cameraRight;
+            vec3_mul_cross(cameraRight, cameraFront, cameraUp);
+            vec3_norm(cameraRight, cameraRight);
+            cameraPos[0] += cameraRight[0] * cameraSpeed;
+            cameraPos[1] += cameraRight[1] * cameraSpeed;
+            cameraPos[2] += cameraRight[2] * cameraSpeed;
+        }
+
+        vec3 target = {
+            cameraPos[0] + cameraFront[0],
+            cameraPos[1] + cameraFront[1],
+            cameraPos[2] + cameraFront[2]
+        };
+        mat4x4_look_at(view, cameraPos, target, cameraUp);
+
+
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         const float ratio = width / (float)height;
@@ -339,8 +432,16 @@ int main(void)
         mat4x4_translate(t_tetra, -1.0f, 0.0f, -2.0f); // Move a bit to the left
         mat4x4_identity(r_tetra);
         mat4x4_rotate_Y(r_tetra, r_tetra, (float)glfwGetTime());
+
+        //mat4x4_mul(m_tetra, t_tetra, r_tetra);
+        //mat4x4_mul(mvp_tetra, p, m_tetra);
+
         mat4x4_mul(m_tetra, t_tetra, r_tetra);
-        mat4x4_mul(mvp_tetra, p, m_tetra);
+
+        // Combine: MVP = Projection * View * Model
+        mat4x4_mul(mvp_tetra, p, view);
+        mat4x4_mul(mvp_tetra, mvp_tetra, m_tetra);
+
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tetraTextureID); // Use the tetrahedron's texture
@@ -358,8 +459,14 @@ int main(void)
         mat4x4_identity(r_cube);
         //mat4x4_rotate_X(r_cube, r_cube, (float)glfwGetTime());
         mat4x4_rotate_Y(r_cube, r_cube, (float)glfwGetTime() * 0.5f);
+
+        //mat4x4_mul(m_cube, t_cube, r_cube);
+        //mat4x4_mul(mvp_cube, p, m_cube);
+
         mat4x4_mul(m_cube, t_cube, r_cube);
-        mat4x4_mul(mvp_cube, p, m_cube);
+
+        mat4x4_mul(mvp_cube, p, view);
+        mat4x4_mul(mvp_cube, mvp_cube, m_cube);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTextureID); // Use the cube's texture
@@ -370,7 +477,6 @@ int main(void)
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
 
