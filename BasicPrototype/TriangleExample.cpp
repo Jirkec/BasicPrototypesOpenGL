@@ -251,14 +251,45 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         printf("Mouse Click at: %f, %f\n", xpos, ypos);
     }
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-    {
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-        
-        // Store for use in picking code
-        printf("Mouse Click at: %f, %f\n", xpos, ypos);
+    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        if (action == GLFW_PRESS) {
+            rightMouseDown = true;
+            firstMouse = true; // Reset for smooth movement
+        }
+        else if (action == GLFW_RELEASE) {
+            rightMouseDown = false;
+        }
     }
+}
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (!rightMouseDown)
+        return;
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // Reversed since y-coordinates go from bottom to top
+    lastX = xpos;
+    lastY = ypos;
+    xoffset *= mouseSensitivity;
+    yoffset *= mouseSensitivity;
+    yaw += xoffset;
+    pitch += yoffset;
+    // Constrain the pitch
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
+    vec3 front;
+    front[0] = cosf(yaw * (3.14159265f / 180.0f)) * cosf(pitch * (3.14159265f / 180.0f));
+    front[1] = sinf(pitch * (3.14159265f / 180.0f));
+    front[2] = sinf(yaw * (3.14159265f / 180.0f)) * cosf(pitch * (3.14159265f / 180.0f));
+    vec3_norm(cameraFront, front);
 }
 
 int main(void)
@@ -281,6 +312,8 @@ int main(void)
 
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
+
 
     glfwMakeContextCurrent(window);
     gladLoadGL(glfwGetProcAddress);
@@ -378,6 +411,12 @@ int main(void)
 
         mat4x4 view;
         mat4x4_identity(view);
+
+        if (rightMouseDown)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        else
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             cameraPos[0] += cameraFront[0] * cameraSpeed;
