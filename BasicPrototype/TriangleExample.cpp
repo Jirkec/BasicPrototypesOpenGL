@@ -12,6 +12,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+//#include <tiny_obj_loader.h>
 
 // load
 GLuint LoadTexture(const char* filename)
@@ -180,6 +181,7 @@ vec3 cameraFront = { 0.0f, 0.0f, -1.0f };
 vec3 cameraUp = { 0.0f, 1.0f, 0.0f };
 
 float cameraSpeed = 0.05f; // Units per frame
+float sprintMultiplier = 2.0f; // Units per frame
 
 float yaw = -90.0f;   // Yaw is initialized to -90.0 degrees to look along -Z
 float pitch = 0.0f;
@@ -299,9 +301,6 @@ int main(void)
     if (!glfwInit())
         exit(EXIT_FAILURE);
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(640, 480, "OpenGL Triangle", NULL, NULL);
     if (!window)
@@ -322,7 +321,7 @@ int main(void)
     //glDisable(GL_CULL_FACE);
 
     glfwSwapInterval(1);
-
+    
     //shaders setup
     const GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
@@ -400,7 +399,7 @@ int main(void)
     glVertexAttribPointer(vtex_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tex));
 
     GLuint cubeTextureID = LoadTexture("D:/Dokumenty/repos/Graphics/BasicPrototype/Resources/Texture/Stone.jpg");
-
+    
     //background color
     glClearColor(0.67f, 0.82f, 0.93f, 1.0f);
 
@@ -408,7 +407,7 @@ int main(void)
     {
         // 1. Poll/input events
         glfwPollEvents();
-
+        
         mat4x4 view;
         mat4x4_identity(view);
 
@@ -417,32 +416,37 @@ int main(void)
         else
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
+        float currentCameraSpeed = cameraSpeed;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) 
+        {
+            currentCameraSpeed *= sprintMultiplier;
+        }
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            cameraPos[0] += cameraFront[0] * cameraSpeed;
-            cameraPos[1] += cameraFront[1] * cameraSpeed;
-            cameraPos[2] += cameraFront[2] * cameraSpeed;
+            cameraPos[0] += cameraFront[0] * currentCameraSpeed;
+            cameraPos[1] += cameraFront[1] * currentCameraSpeed;
+            cameraPos[2] += cameraFront[2] * currentCameraSpeed;
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            cameraPos[0] -= cameraFront[0] * cameraSpeed;
-            cameraPos[1] -= cameraFront[1] * cameraSpeed;
-            cameraPos[2] -= cameraFront[2] * cameraSpeed;
+            cameraPos[0] -= cameraFront[0] * currentCameraSpeed;
+            cameraPos[1] -= cameraFront[1] * currentCameraSpeed;
+            cameraPos[2] -= cameraFront[2] * currentCameraSpeed;
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
             vec3 cameraLeft;
             vec3_mul_cross(cameraLeft, cameraFront, cameraUp);
             vec3_norm(cameraLeft, cameraLeft);
-            cameraPos[0] -= cameraLeft[0] * cameraSpeed;
-            cameraPos[1] -= cameraLeft[1] * cameraSpeed;
-            cameraPos[2] -= cameraLeft[2] * cameraSpeed;
+            cameraPos[0] -= cameraLeft[0] * currentCameraSpeed;
+            cameraPos[1] -= cameraLeft[1] * currentCameraSpeed;
+            cameraPos[2] -= cameraLeft[2] * currentCameraSpeed;
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
             vec3 cameraRight;
             vec3_mul_cross(cameraRight, cameraFront, cameraUp);
             vec3_norm(cameraRight, cameraRight);
-            cameraPos[0] += cameraRight[0] * cameraSpeed;
-            cameraPos[1] += cameraRight[1] * cameraSpeed;
-            cameraPos[2] += cameraRight[2] * cameraSpeed;
+            cameraPos[0] += cameraRight[0] * currentCameraSpeed;
+            cameraPos[1] += cameraRight[1] * currentCameraSpeed;
+            cameraPos[2] += cameraRight[2] * currentCameraSpeed;
         }
 
         vec3 target = {
@@ -451,7 +455,7 @@ int main(void)
             cameraPos[2] + cameraFront[2]
         };
         mat4x4_look_at(view, cameraPos, target, cameraUp);
-
+        
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -459,7 +463,7 @@ int main(void)
 
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
         mat4x4 p;
         mat4x4_perspective(p, 1.0f, ratio, 0.1f, 10.0f);
 
@@ -514,7 +518,7 @@ int main(void)
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)&mvp_cube);
         glBindVertexArray(Cube_vertex_array_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-
+        
         glfwSwapBuffers(window);
     }
 
